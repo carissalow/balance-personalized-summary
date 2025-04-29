@@ -3,7 +3,7 @@
 
 ```{python}
 #| tags: [parameters]
-pid = "117"
+pid = "testjen"
 ```
 
 ```{python}
@@ -31,23 +31,23 @@ GROUP = "balance"
 # data formatting
 COLS_N = 3
 ACTIVITY_REPLACEMENTS = (
-	("Other activity(events, shopping,...)", "Other activity (events, shopping, ...)"),
+    ("Other activity(events, shopping,...)", "Other activity (events, shopping, ...)"),
     ("social Media", "social media"),
     ("Yard Work", "Yard work"),
     ("Go to Therapy", "Go to therapy"),
     ("Movve", "Move"),
     ("Spending time", "Spend time"),
-	("Playing Guitar", "Playing guitar"),
-	("Weight Training", "Weight training"),
-	("Strength Training", "Strength training"),
-	("Word Searches", "Word Searches"),
-	("Internet Research", "Internet research"),
-	("Outside Tasks", "Outside tasks"),
-	("Ride Adventure Motorcycle", "Ride adventure motorcycle"),
-	("Ride Dirt Bike", "Ride dirt bike"),
-	("Ride Mountain Bike", "Ride mountain bike"),
-	("Riding Bike", "Riding bike"),
-	("Utv", "UTV")
+    ("Playing Guitar", "Playing guitar"),
+    ("Weight Training", "Weight training"),
+    ("Strength Training", "Strength training"),
+    ("Word Searches", "Word Searches"),
+    ("Internet Research", "Internet research"),
+    ("Outside Tasks", "Outside tasks"),
+    ("Ride Adventure Motorcycle", "Ride adventure motorcycle"),
+    ("Ride Dirt Bike", "Ride dirt bike"),
+    ("Ride Mountain Bike", "Ride mountain bike"),
+    ("Riding Bike", "Riding bike"),
+    ("Utv", "UTV")
 )
 
 # data table styling
@@ -93,8 +93,8 @@ for i in range(0, COLS_N):
     phase1_cols_widths["temp" + str(i)] = PHASE1_ACTIVITIES_WIDTH
 
 if pid == "119":
-	PHASE2_ACTIVITIES_WIDTH = "24%"
-	NOTES_WIDTH = "16%"
+    PHASE2_ACTIVITIES_WIDTH = "24%"
+    NOTES_WIDTH = "16%"
 
 phase2_cols_widths = {
     "Day of week": DAY_WIDTH,
