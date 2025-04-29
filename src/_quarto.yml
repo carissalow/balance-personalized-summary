@@ -1,0 +1,23 @@
+title: "BALANCE final study report for testjen"
+author: "Mobile Sensing + Health Institute"
+date: today
+format:
+  html:
+    toc: false
+    toc-location: left
+    toc-color: "#3F51B5"
+    number-sections: false
+    theme: cosmo
+    max-width: 3500px
+    fontsize: 1em
+    self-contained: true
+    embed-resources: true
+    fig-dpi: 2000
+    fig-align: right
+    page-layout: full
+    linkcolor: "#3F51B5"
+echo: false
+message: false
+warning: false
+from: "markdown+emoji"
+output-file: "balance_final_report_testjen.html"

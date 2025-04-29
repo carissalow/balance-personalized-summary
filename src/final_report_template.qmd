@@ -1,0 +1,239 @@
+---
+---
+
+```{python}
+#| tags: [parameters]
+pid = "117"
+```
+
+```{python}
+import pandas as pd 
+import numpy as np
+import plotnine as p9 
+import matplotlib
+import matplotlib.pyplot as plt  
+import matplotlib.font_manager
+import warnings
+import yaml
+
+from sqlalchemy import create_engine
+from great_tables import *
+from utils import *
+
+warnings.filterwarnings("ignore")
+plt.rcParams["figure.dpi"] = 1000
+```
+
+```{python}
+# database
+GROUP = "balance"
+
+# data formatting
+COLS_N = 3
+ACTIVITY_REPLACEMENTS = (
+	("Other activity(events, shopping,...)", "Other activity (events, shopping, ...)"),
+    ("social Media", "social media"),
+    ("Yard Work", "Yard work"),
+    ("Go to Therapy", "Go to therapy"),
+    ("Movve", "Move"),
+    ("Spending time", "Spend time"),
+	("Playing Guitar", "Playing guitar"),
+	("Weight Training", "Weight training"),
+	("Strength Training", "Strength training"),
+	("Word Searches", "Word Searches"),
+	("Internet Research", "Internet research"),
+	("Outside Tasks", "Outside tasks"),
+	("Ride Adventure Motorcycle", "Ride adventure motorcycle"),
+	("Ride Dirt Bike", "Ride dirt bike"),
+	("Ride Mountain Bike", "Ride mountain bike"),
+	("Riding Bike", "Riding bike"),
+	("Utv", "UTV")
+)
+
+# data table styling
+DAY_WIDTH = "3%"
+DATE_WIDTH = "9%"
+GOODNESS_WIDTH = "5%"
+NOTES_WIDTH = "18%"
+PHASE1_ACTIVITIES_WIDTH = "20%"
+PHASE2_ACTIVITIES_WIDTH = "22%"
+
+TABLE_FONT = "Inconsolata"
+TABLE_FONT_SIZE = 14
+TABLE_DASHED = False
+TABLE_SCROLLABLE = False
+
+# value box styling 
+PLOT_FONT = "Ayuthaya"
+
+# color scales
+SCORE_MIN = 0
+SCORE_MAX = 10
+SCORE_NA = -1
+```
+
+```{python}
+# derive settings for data table styling
+scores = [i for i in range(SCORE_MIN, SCORE_MAX+1, 1)]
+score_categories = [SCORE_NA] + scores
+
+goodness_cmap_discrete = generate_custom_cmap("redyellowgreen", "discrete", n_colors=len(scores))
+goodness_cmap_hexcodes = get_cmap_hexcodes(goodness_cmap_discrete, n_colors=len(scores))
+fitbit_cmap_discrete = generate_custom_cmap("indigo", "discrete", n_colors=len(scores))
+fitbit_cmap_hexcodes = get_cmap_hexcodes(fitbit_cmap_discrete, n_colors=len(scores))
+
+phase1_cols_widths = {
+    "Day of week": DAY_WIDTH,
+    "Date": DATE_WIDTH,
+    "Goodness rating": GOODNESS_WIDTH,
+    "Note": NOTES_WIDTH
+}
+
+for i in range(0, COLS_N):
+    phase1_cols_widths["temp" + str(i)] = PHASE1_ACTIVITIES_WIDTH
+
+if pid == "119":
+	PHASE2_ACTIVITIES_WIDTH = "24%"
+	NOTES_WIDTH = "16%"
+
+phase2_cols_widths = {
+    "Day of week": DAY_WIDTH,
+    "Date": DATE_WIDTH,
+    "Goodness rating": GOODNESS_WIDTH,
+    "Planned activities": PHASE2_ACTIVITIES_WIDTH,
+    "Completed activities": PHASE2_ACTIVITIES_WIDTH,
+    "Morning plan": NOTES_WIDTH,
+    "Evening note": NOTES_WIDTH
+}
+```
+
+```{python}
+# pull phase 1 and 2 data
+credentials = load_credentials(GROUP)
+con = connect_to_database(credentials)
+
+queries = generate_queries(pid=pid)
+
+phase1_data = pd.read_sql(sql=queries["phase1"], con=con)
+phase2_data = pd.read_sql(sql=queries["phase2"], con=con)
+phase1_extra_data = pd.read_sql(sql=queries["phase1_extra"], con=con)
+phase2_extra_data = pd.read_sql(sql=queries["phase2_extra"], con=con)
+```
+
+```{python}
+# format phase 1 data
+if not phase1_data.empty:
+    phase1_data["Day of week"] = abbreviate_day_of_week(phase1_data, "Day of week")
+
+    for old, new in ACTIVITY_REPLACEMENTS:
+        phase1_data["Completed activities"] = phase1_data["Completed activities"].str.replace(old, new)
+
+    temp_cols = ["temp" + str(i) for i in range(0, COLS_N)]
+    phase1_data[temp_cols] = phase1_data["Completed activities"].apply(lambda x: chunk_list(x.split(",  "), n=COLS_N)).apply(pd.Series)
+    for col in temp_cols:
+        phase1_data[col] = "-&nbsp;" + phase1_data[col].apply(lambda x: '<br>-&nbsp;'.join(map(str, x)))
+        phase1_data[col] = np.where(phase1_data[col] == "-&nbsp;", "", phase1_data[col])
+
+    phase1_cols_mapping = {}
+    for col in temp_cols:
+        if col.endswith("0"):
+            phase1_cols_mapping[col] = "Completed activities"
+        else:
+            phase1_cols_mapping[col] = ""
+
+if phase1_data.empty:
+    temp_cols = ["Completed activities"]
+    phase1_cols_mapping = {}
+    phase1_cols_widths = {k: v for k, v in phase1_cols_widths.items() if not k.startswith("temp")}
+
+phase1_cols_mapping["Day of week"] = "Day"
+phase1_cols_mapping["Goodness rating"] = "Goodness"
+
+# format phase 2 data
+if not phase2_data.empty:
+    phase2_data["Goodness rating"] = phase2_data["Goodness rating"].astype("Int64")
+    phase2_data["Day of week"] = abbreviate_day_of_week(phase2_data, "Day of week")
+
+    for old, new in ACTIVITY_REPLACEMENTS:
+        phase2_data["Planned activities"] = phase2_data["Planned activities"].str.replace(old, new)
+        phase2_data["Completed activities"] =  phase2_data["Completed activities"].str.replace(old, new)
+    
+    phase2_data["Planned activities"] = "-&nbsp;" + phase2_data["Planned activities"].str.replace(", ", "<br>-&nbsp;")
+    phase2_data["Completed activities"] = "-&nbsp;" + phase2_data["Completed activities"].str.replace(", ", "<br>-&nbsp;")
+
+if not phase2_extra_data.empty:
+    for old, new in ACTIVITY_REPLACEMENTS:
+        phase2_extra_data["activity_list"] = phase2_extra_data["activity_list"].str.replace(old, new)
+       
+phase2_cols_mapping = {"Day of week":"Day", "Goodness rating":"Goodness"}
+```
+
+<br>
+
+## Thank you! :heart:
+
+Thank you for completing the BALANCE study! We are so grateful for your participation. Below is a summary of the data you collected during both phases of the study. We will also share the overall results of the study with you once they are published.  
+
+<br>
+
+## BALANCE Phase 1
+
+During Phase 1 of the study, you indicated which activities you did and rated the goodness of your day on a scale from 0 to 10 each evening. You also optionally rated how much you enjoyed each activity using the same 0 to 10 scale. You may have also worn a Fitbit to measure your daily total step count and hours of sleep.  
+
+<br>
+
+```{python}
+phase1_value_box_data = get_value_box_data(phase1_data, phase=1, extra_data=phase1_extra_data)
+create_value_box_plot(phase1_value_box_data, font=PLOT_FONT)
+```
+
+<br>
+
+```{python}
+#| html-table-processing: none
+create_data_table(
+    data = phase1_data.filter(["Day of week", "Date", "Goodness rating"] + temp_cols + ["Note", "Steps", "Sleep"], axis=1), 
+    cols_widths=phase1_cols_widths, 
+    goodness_hexcodes=goodness_cmap_hexcodes, 
+    fitbit_hexcodes=fitbit_cmap_hexcodes, 
+    cols_labels=phase1_cols_mapping, 
+    font=TABLE_FONT, 
+    font_size=TABLE_FONT_SIZE,
+    dashed=TABLE_DASHED, 
+    scrollable=TABLE_SCROLLABLE
+)
+```
+
+<br>
+<br>
+
+## BALANCE Phase 2
+
+After you completed Phase 1, you met with Annie to review your data and selected a handful of meaningful activities to focus on in Phase 2. The activities you selected were: **`{python} phase2_extra_data["activity_list"][0]`**. During Phase 2 of the study, you planned which meaningful activities to do each morning, and indicated which of those activities you did and rated the goodness of your day each evening. You may have also worn a Fitbit to measure your daily total step count and hours of sleep.    
+
+<br>
+
+```{python}
+phase2_value_box_data = get_value_box_data(phase2_data, phase=2)
+create_value_box_plot(phase2_value_box_data, font=PLOT_FONT)
+```
+
+<br>
+
+```{python}
+#| html-table-processing: none
+create_data_table(
+    data = phase2_data.drop(["has_morning", "has_evening", "n_planned_activities", "n_completed_activities", "has_fitbit"], axis=1), 
+    cols_widths=phase2_cols_widths, 
+    goodness_hexcodes=goodness_cmap_hexcodes, 
+    fitbit_hexcodes=fitbit_cmap_hexcodes, 
+    cols_labels=phase2_cols_mapping, 
+    font=TABLE_FONT, 
+    font_size=TABLE_FONT_SIZE,
+    dashed=TABLE_DASHED, 
+    scrollable=TABLE_SCROLLABLE
+)
+```
+
+<br>
+<br>

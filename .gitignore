@@ -1,0 +1,16 @@
+credentials.yaml
+
+data/*
+!/data/.gitkeep
+output/*
+!/output/.gitkeep
+src/output/*
+!/src/output/.gitkeep
+src/.quarto/
+
+__pycache__/
+.idea
+.vscode/
+.spyproject/
+.ipynb_checkpoints/
+.DS_Store
