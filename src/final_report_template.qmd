@@ -40,7 +40,7 @@ ACTIVITY_REPLACEMENTS = (
     ("Playing Guitar", "Playing guitar"),
     ("Weight Training", "Weight training"),
     ("Strength Training", "Strength training"),
-    ("Word Searches", "Word Searches"),
+    ("Word Searches", "Word searches"),
     ("Internet Research", "Internet research"),
     ("Outside Tasks", "Outside tasks"),
     ("Ride Adventure Motorcycle", "Ride adventure motorcycle"),
