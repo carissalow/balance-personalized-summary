@@ -1,6 +1,6 @@
-# balance-personalized-report
+# balance-personalized-summary
 
-Personalized data summary reports for participants in the **Behavioral Activation-Led Activity eNgagement for Cancer Empowerment (BALANCE)** study at the Mobile Sensing + Health Institute at the University of Pittsburgh.  
+Personalized end-of-study data summary reports for participants in the **Behavioral Activation-Led Activity eNgagement for Cancer Empowerment (BALANCE)** study at the Mobile Sensing + Health Institute at the University of Pittsburgh. These reports are provided at the conclusion of the study and summarize the data participants collected during the two stages of the intervention, including their daily goodness ratings, planned and/or completed activities, personal notes, and Fitbit steps and sleep data. 
 
 <br>
 
@@ -21,7 +21,7 @@ Personalized data summary reports for participants in the **Behavioral Activatio
 4. Restore the Python virtual environment:
 
     ```bash
-    cd balance-personalized-report
+    cd balance-personalized-summary
     conda env create -f environment.yml -n balance
     ```
 
@@ -44,7 +44,7 @@ Personalized data summary reports for participants in the **Behavioral Activatio
 
 ### For a specific participant
 
-To generate a final study report for a **specific** participant, `PID` (e.g., 101), run:
+To generate an end-of-study report for a **specific** participant, `PID` (e.g., 101), run:
 
 ```bash
 cd src
